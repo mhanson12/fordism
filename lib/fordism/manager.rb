@@ -12,15 +12,11 @@ module Fordism
     end
     
     def add_conveyor(args={})
-      from = args[:from].to_sym
-      to   = args[:to].to_sym
-      @process.add_conveyor(from, to)
+      @process.add_conveyor(*from_to(args))
     end
     
     def has_conveyor?(args={})
-      from = args[:from].to_sym
-      to   = args[:to].to_sym
-      @process.has_conveyor?(from, to)
+      @process.has_conveyor?(*from_to(args))
     end
 
     def manage(station)
@@ -39,6 +35,10 @@ module Fordism
 
     def conveyors(process)
       @process.conveyors
+    end
+
+    def from_to(args)
+      from, to = args[:from].to_sym, args[:to].to_sym
     end
   end
 end
