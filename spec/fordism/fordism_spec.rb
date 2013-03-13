@@ -1,5 +1,6 @@
 # encoding: utf-8
 require 'spec_helper'
+=begin
 describe Fordism do
   let(:manager)         { Fordism::Manager.new }
   let(:init)            { manager.create_station(name: :init) }
@@ -37,3 +38,4 @@ describe Fordism do
 
   end
 end
+=end

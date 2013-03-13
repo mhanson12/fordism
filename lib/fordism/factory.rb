@@ -17,10 +17,5 @@ module Fordism
       @name     = args[:name]
       @managers = args[:manager]
     end
-
-    def stations
-      @managers.
-    end
-
   end
 end

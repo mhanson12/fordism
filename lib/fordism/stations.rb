@@ -4,26 +4,16 @@ require 'stations/source'
 require 'stations/sink'
 require 'stations/joint'
 
+# A station is a wrapper around the block that executes state specific code
+# It is unaware of its line-worker
 module Fordism
   class Station
     attr_reader :name
     attr_reader :block
-    attr_reader :line_worker
 
-    def initialize(args={}, &block)
-      @name        = args[:name].to_sym
-      @line_worker = args[:line_worker]
-      @block       = block
-    end
-
-    def 
-
-    def report_to(manager)
-      @manager = manager
-    end
-
-    def reports_to
-      @manager
+    def initialize(name, &block)
+      @name   = name.to_sym
+      @block  = block
     end
 
     def to_sym
@@ -34,51 +24,98 @@ module Fordism
       self.name == other.name
     end
 
-    # workflow can move to the next station
-    def complete?
-      waiting_to_receive.empty? and waiting_to_send.empty?
+    ### Operational methods
+
+    
+    ## Queue methods
+
+    # Queue a job
+    def queue_job(*job)
+      @incoming = incoming + [job]
     end
 
-    # workflow cannot move to the next station
-    def incomplete?
-      !complete?
+    # Queue a set of jobs
+    def queue_batch(*jobs)
+      @incoming = incoming + jobs
     end
 
-    # which stations are being waited on?
-    def waiting_to_receive
-      inlets - received
+    ## Dequeue methods
+
+    # Process 1 job; Syntactic sugar for process_batch(1)
+    def process_job
+      process_batch(size: 1)
     end
 
-    def waiting_to_send
-      outlets - sent
+    # Process n jobs
+    def process_batch(args={})
+      args[:size]
+      incoming.size
+      incoming
+      size = batch_size(args[:size])
+      run_batch_of_size(size)
+    end
+    
+    # Process continuously until the queue is empty
+    def process_all
+      process_batch(size: incoming.size) while !incoming.empty?
     end
 
-    def inlets
-      @inlets ||= @manager.transitions_to(self) rescue []
+    def open?
+      incoming.empty?
     end
 
-    def outlets
-      @outlets ||= @manager.transitions_from(self) rescue []
+    def closed?
+      not open?
+    end
+
+    def completed_jobs
+      outgoing
+    end
+
+    def review_all
+      result = outgoing.dup
+      @outgoing = []
+      result
     end
 
     private
 
-    def get_work_from(other)
-      @received << other.to_sym
-    end
-
-    def send_work_to(other)
-      conveyor = conveyor_for(other)
-      conveyor.run
-      if conveyor.complete?
-        other.get_work_from(self)
-        @sent << other.to_sym        
+    def batch_size(proposed)
+      case
+      when proposed > incoming.size then incoming.size
+      else proposed
       end
-      conveyor.complete?
     end
 
-    def conveyor_for(other)
-      @manager.find_conveyor(self, other)
+    def run_batch_of_size(size)
+      size.times do
+        run
+      end
+    end
+
+    def run
+      args = incoming.shift
+      result = block.call(*args)
+      outgoing << result
+      result
+    end
+
+    def review
+      outgoing.shift
+    end
+
+    def run_all(*jobs)
+      jobs.collect do |job|
+        run
+      end
+    end
+
+    def incoming
+      @incoming ||= []
+    end
+
+    def outgoing
+      @outgoing ||= []
     end
   end
 end

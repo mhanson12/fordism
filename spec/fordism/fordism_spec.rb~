@@ -1,5 +1,0 @@
-# encoding: utf-8
-require 'spec_helper'
-describe Fordism do
-  let(:manager) { Fordism::Manager.new }
-end

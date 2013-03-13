@@ -2,14 +2,43 @@
 require 'spec_helper'
 describe Fordism::Manager do
   subject { manager  }
-  let(:manager) { Fordism::Manager.new }
+  let(:process)  { Fordism::Process.new('Sprocket Assembly')                  }
+  let(:manager)  { Fordism::Manager.new('George Jetson', process)             }
+  let(:station1) { Fordism::Station.new('mine')     { p "hi-ho"              }}
+  let(:station2) { Fordism::Station.new('smelt')    { p "hot!hot!hot!"       }}
+  let(:station3) { Fordism::Station.new('shape')    { p "pourrrring"         }}
+  let(:station4) { Fordism::Station.new('cool')     { p "borrrrring"         }}
+  let(:station5) { Fordism::Station.new('polish')   { p "shiny things"       }}
+  let(:station6) { Fordism::Station.new('paint')    { p "take a deep breath" }}
+  let(:station7) { Fordism::Station.new('package')  { p "done!"              }}
 
-  it "should be able to create stations" do
-    direct   = Fordism::Station.new(name: :init, manager: manager)
-    implicit = manager.create_station(name: :init)
-    implicit.should == direct
+
+  it "should be able to add stations" do
+    manager.add_station(station1)
+    manager.has_station?(station1).should be_true
+    manager.has_station?(:mine).should be_true
   end
 
+  context "from a blank slate" do
+    it "should be able to add conveyors" do
+      manager.add_conveyor(from: station1, to: station2)
+      manager.has_conveyor?(from: station1, to: station2).should be_true
+    end
+  end
+
+  context "with existing process" do
+    before do
+      manager.add_station(station1)
+      manager.add_station(station2)
+    end
+    
+    it "should be able to add conveyors" do
+      manager.add_conveyor(to: station1, from: station2)
+      manager.has_conveyor?(to: station1, from: station2).should be_true
+    end
+  end
+end
+=begin
   context "without a conveyor" do
     it "should not be able to find a conveyor" do
       subject.find_conveyor(:station1, :station2).should be_nil
@@ -123,3 +152,4 @@ describe Fordism::Manager do
     end
   end
 end
+=end
